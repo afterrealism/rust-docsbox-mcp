@@ -1,0 +1,45 @@
+# Rust DocsBox MCP
+
+> A Model Context Protocol (MCP) server that gives LLM coding agents typed access to Rust documentation, clippy, rustfmt, crates.io and the Rust Playground over a single streamable-HTTP endpoint at `https://rust-mcp.afterrealism.com/mcp`.
+
+Rust DocsBox is self-contained: it bundles a snapshot of the Rust standard library and popular-crate documentation, runs clippy and rustfmt in tempdirs with bounded timeouts, drives the official Rust Playground for sandboxed execution, and queries crates.io for crate metadata. It speaks MCP streamable-HTTP (spec 2025-06-18), so any MCP-aware client can connect with a one-line config. The server never executes user code on its own host outside of the Playground sandbox; the `run_locally` tool returns a plan the calling agent dispatches through its own host bash tool.
+
+## Docs
+
+- [Landing page](https://rust-mcp.afterrealism.com/): overview, endpoint, quickstart, tool list, trust model.
+- [Tool index (JSON)](https://rust-mcp.afterrealism.com/tools): machine-readable tool list with names and descriptions.
+- [Health probe](https://rust-mcp.afterrealism.com/health): liveness JSON with corpus section count.
+- [README on GitHub](https://github.com/afterrealism/rust-docsbox-mcp): repository-level documentation.
+- [llms-full.txt](https://rust-mcp.afterrealism.com/llms-full.txt): full Markdown dump of the landing page for retrieval.
+
+## Tools exposed by the server
+
+- `list_sections`: browse indexed std and popular-crate documentation paths in the bundled corpus.
+- `get_documentation`: fetch the markdown body of a single section path returned by `list_sections`.
+- `clippy_check`: lint a Rust snippet and return JSON diagnostics from `cargo clippy`.
+- `clippy_fix`: auto-apply clippy suggestions to a snippet and return the rewritten source.
+- `rustfmt`: format a snippet with `rustfmt --emit stdout`.
+- `playground_link`: build a shareable `play.rust-lang.org` permalink for a snippet.
+- `playground_run`: execute a snippet on the official Rust Playground sandbox.
+- `crate_search`: query `crates.io` and return ranked matches.
+- `crate_info`: versions, features, dependencies, repository and `docs.rs` URL for a crate.
+- `rustc_explain`: reference text for a Rust compiler error code (e.g. `E0382`).
+- `run_locally`: emit a plan of shell commands the calling agent should run on the user's machine; the server itself never executes user code.
+
+## Endpoints
+
+- `POST https://rust-mcp.afterrealism.com/mcp`: MCP streamable-HTTP transport (spec 2025-06-18).
+- `GET https://rust-mcp.afterrealism.com/`: HTML landing page.
+- `GET https://rust-mcp.afterrealism.com/tools`: JSON tool index.
+- `GET https://rust-mcp.afterrealism.com/health`: liveness probe.
+- `GET https://rust-mcp.afterrealism.com/robots.txt`: crawler policy (all major search and AI crawlers explicitly allowed).
+- `GET https://rust-mcp.afterrealism.com/sitemap.xml`: sitemap.
+- `GET https://rust-mcp.afterrealism.com/llms.txt`: this file.
+- `GET https://rust-mcp.afterrealism.com/llms-full.txt`: full Markdown dump.
+
+## Optional
+
+- [MCP specification 2025-06-18](https://modelcontextprotocol.io/specification/2025-06-18/basic/transports): transport spec the server implements.
+- [Rust Playground](https://play.rust-lang.org/): the upstream sandbox `playground_run` and `playground_link` target.
+- [crates.io](https://crates.io/): the upstream registry `crate_search` and `crate_info` query.
+- [Companion Python server](https://python-mcp.afterrealism.com/): same shape, Python tooling.

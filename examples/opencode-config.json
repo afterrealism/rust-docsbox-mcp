@@ -1,0 +1,15 @@
+{
+  "$schema": "https://opencode.ai/config.json",
+  "mcp": {
+    "rust-docsbox": {
+      "type": "remote",
+      "url": "https://rust-mcp.afterrealism.com/mcp",
+      "enabled": true
+    },
+    "rust-docsbox-local": {
+      "type": "remote",
+      "url": "http://127.0.0.1:7801/mcp",
+      "enabled": false
+    }
+  }
+}

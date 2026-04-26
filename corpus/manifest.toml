@@ -1,0 +1,205 @@
+# Fallback section list. Used when corpus/index.sqlite is absent.
+# `list_sections` returns names from this file; `get_documentation`
+# falls back to the network in that mode.
+#
+# To rebuild the rich corpus (sqlite + zstd blobs), run:
+#   cargo run --bin build_corpus      (TODO once corpus builder is added)
+# or download a prebuilt corpus tarball into ./corpus/.
+
+[[sections]]
+package = "std"
+path = "std::vec::Vec"
+kind = "struct"
+summary = "A contiguous growable array type, written as `Vec<T>`."
+
+[[sections]]
+package = "std"
+path = "std::collections::HashMap"
+kind = "struct"
+summary = "A hash map implemented with quadratic probing and SIMD lookup."
+
+[[sections]]
+package = "std"
+path = "std::collections::BTreeMap"
+kind = "struct"
+summary = "Ordered map based on a B-Tree."
+
+[[sections]]
+package = "std"
+path = "std::sync::Arc"
+kind = "struct"
+summary = "Atomically reference-counted shared pointer."
+
+[[sections]]
+package = "std"
+path = "std::sync::Mutex"
+kind = "struct"
+summary = "A mutual exclusion primitive useful for protecting shared data."
+
+[[sections]]
+package = "std"
+path = "std::option::Option"
+kind = "enum"
+summary = "Optional values."
+
+[[sections]]
+package = "std"
+path = "std::result::Result"
+kind = "enum"
+summary = "A type representing success (`Ok`) or failure (`Err`)."
+
+[[sections]]
+package = "std"
+path = "std::iter::Iterator"
+kind = "trait"
+summary = "Composable external iteration."
+
+[[sections]]
+package = "std"
+path = "std::future::Future"
+kind = "trait"
+summary = "An asynchronous computation."
+
+[[sections]]
+package = "std"
+path = "std::pin::Pin"
+kind = "struct"
+summary = "Pin wraps a pointer to make its pointee not move."
+
+[[sections]]
+package = "tokio"
+path = "tokio::runtime::Runtime"
+kind = "struct"
+summary = "Tokio multi-threaded runtime entry-point."
+
+[[sections]]
+package = "tokio"
+path = "tokio::sync::Mutex"
+kind = "struct"
+summary = "An async mutex that can be held across `.await` points."
+
+[[sections]]
+package = "tokio"
+path = "tokio::sync::RwLock"
+kind = "struct"
+summary = "An async readers-writers lock."
+
+[[sections]]
+package = "tokio"
+path = "tokio::task::JoinHandle"
+kind = "struct"
+summary = "Handle to a spawned task; awaiting yields its result."
+
+[[sections]]
+package = "tokio"
+path = "tokio::select"
+kind = "macro"
+summary = "Wait on multiple async branches and act on the first to complete."
+
+[[sections]]
+package = "tokio"
+path = "tokio::time::sleep"
+kind = "fn"
+summary = "Wait until the specified duration has elapsed."
+
+[[sections]]
+package = "tokio"
+path = "tokio::net::TcpListener"
+kind = "struct"
+summary = "Async TCP socket server, listening for connections."
+
+[[sections]]
+package = "axum"
+path = "axum::Router"
+kind = "struct"
+summary = "The router type that connects URL paths to handlers."
+
+[[sections]]
+package = "axum"
+path = "axum::extract::State"
+kind = "struct"
+summary = "Extractor for application state."
+
+[[sections]]
+package = "axum"
+path = "axum::extract::Path"
+kind = "struct"
+summary = "Extractor for URL path parameters."
+
+[[sections]]
+package = "axum"
+path = "axum::extract::Json"
+kind = "struct"
+summary = "Extractor and response type for JSON payloads."
+
+[[sections]]
+package = "axum"
+path = "axum::response::IntoResponse"
+kind = "trait"
+summary = "Trait for converting a value into an HTTP response."
+
+[[sections]]
+package = "serde"
+path = "serde::Serialize"
+kind = "trait"
+summary = "A data structure that can be serialized into any data format."
+
+[[sections]]
+package = "serde"
+path = "serde::Deserialize"
+kind = "trait"
+summary = "A data structure that can be deserialized from any data format."
+
+[[sections]]
+package = "anyhow"
+path = "anyhow::Error"
+kind = "struct"
+summary = "Idiomatic application error type."
+
+[[sections]]
+package = "anyhow"
+path = "anyhow::Result"
+kind = "type"
+summary = "Type alias for `Result<T, anyhow::Error>`."
+
+[[sections]]
+package = "thiserror"
+path = "thiserror::Error"
+kind = "derive"
+summary = "Derive macro for std::error::Error."
+
+[[sections]]
+package = "sqlx"
+path = "sqlx::query"
+kind = "macro"
+summary = "Compile-time-checked SQL query."
+
+[[sections]]
+package = "sqlx"
+path = "sqlx::PgPool"
+kind = "type"
+summary = "A pool of Postgres connections."
+
+[[sections]]
+package = "reqwest"
+path = "reqwest::Client"
+kind = "struct"
+summary = "An async HTTP client with connection pooling."
+
+[[sections]]
+package = "rmcp"
+path = "rmcp::ServiceExt"
+kind = "trait"
+summary = "Extension trait that turns a handler into a running MCP service."
+
+[[sections]]
+package = "rmcp"
+path = "rmcp::transport::streamable_http_server::StreamableHttpService"
+kind = "struct"
+summary = "Tower service exposing an MCP handler over streamable HTTP."
+
+[[sections]]
+package = "duckdb"
+path = "duckdb::Connection"
+kind = "struct"
+summary = "A connection to a DuckDB database."

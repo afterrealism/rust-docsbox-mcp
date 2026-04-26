@@ -1,0 +1,15 @@
+target/
+tests/snapshots/
+.git/
+.github/
+infra/
+*.log
+*.tar
+*.tmp
+.env
+.env.*
+.dev.vars
+.cloudflare/
+wrangler.toml
+DEPLOY.md
+node_modules/

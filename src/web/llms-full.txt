@@ -1,0 +1,156 @@
+# Rust DocsBox MCP, full reference
+
+> A Model Context Protocol (MCP) server that gives LLM coding agents typed access to Rust documentation, clippy, rustfmt, crates.io and the Rust Playground over a single streamable-HTTP endpoint.
+
+This file is a self-contained Markdown dump intended for retrieval by LLM tooling. It mirrors the content of the human-facing landing page at `https://rust-mcp.afterrealism.com/` but in a single flat document with no JavaScript, no styling, and stable headings. Crawlers and AI agents are explicitly welcome to ingest, index, and quote from this file.
+
+Last updated: 2026-04-27. License: MIT.
+
+## Identity
+
+- Name: `rust-docsbox-mcp`
+- Public endpoint: `https://rust-mcp.afterrealism.com/mcp`
+- Transport: MCP streamable HTTP, specification 2025-06-18.
+- Source: <https://github.com/afterrealism/rust-docsbox-mcp>
+- Companion server (Python): <https://python-mcp.afterrealism.com/>
+
+## Overview
+
+Rust DocsBox is a self-contained MCP server. It bundles a snapshot of the Rust standard library and popular-crate documentation, and exposes a small set of tools that let a coding agent look things up, lint and format code, run snippets on the official Rust Playground, and search crates.io, all without bouncing through arbitrary internet calls or shipping `rustc` to the client.
+
+It speaks MCP streamable HTTP (spec 2025-06-18), so any MCP-aware client, OpenCode, Claude Code, Cursor, Continue, can connect with a one-line config.
+
+## Endpoints
+
+- `POST /mcp`, MCP streamable-HTTP transport. All tool calls flow through here.
+- `GET /`, HTML landing page with quickstart, tool list, and trust model.
+- `GET /tools`, JSON tool index. Useful for static catalogs and discovery.
+- `GET /health`, liveness probe. Returns `{ok, name, version, corpus_sections}`.
+- `GET /robots.txt`, crawler policy. All major search and AI crawlers explicitly allowed; only `/mcp` (the JSON-RPC transport) is disallowed.
+- `GET /sitemap.xml`, sitemap.
+- `GET /llms.txt`, short llmstxt.org index.
+- `GET /llms-full.txt`, this file.
+
+## Quick start
+
+### OpenCode
+
+Add the server to your `opencode.json` under `mcp`:
+
+```json
+{
+  "mcp": {
+    "rust-docsbox": {
+      "type": "remote",
+      "url": "https://rust-mcp.afterrealism.com/mcp",
+      "enabled": true
+    }
+  }
+}
+```
+
+### Claude Code, Cursor, Continue, any MCP streamable-HTTP client
+
+```json
+{
+  "mcpServers": {
+    "rust-docsbox": {
+      "transport": {
+        "type": "http",
+        "url": "https://rust-mcp.afterrealism.com/mcp"
+      }
+    }
+  }
+}
+```
+
+### CLI add (OpenCode)
+
+```sh
+opencode mcp add rust-docsbox \
+  --transport http \
+  --url https://rust-mcp.afterrealism.com/mcp
+```
+
+## Tools
+
+Every tool the agent sees in its tool list is documented below.
+
+### list_sections
+
+Browse indexed std and popular-crate documentation. Returns paths into the bundled corpus snapshot. Filterable by prefix.
+
+### get_documentation
+
+Markdown for a single section path returned by `list_sections`. Read-only SQLite + zstd blobs, served from the binary.
+
+### clippy_check
+
+Lint a Rust snippet and return JSON diagnostics. Runs `cargo clippy` in a tempdir under bounded time and output limits.
+
+### clippy_fix
+
+Auto-apply clippy suggestions to a snippet. Returns the rewritten source.
+
+### rustfmt
+
+Format a snippet via `rustfmt --emit stdout`.
+
+### playground_link
+
+Build a shareable `play.rust-lang.org` permalink.
+
+### playground_run
+
+Execute a snippet on the official Rust Playground sandbox.
+
+### crate_search
+
+Search `crates.io` and return top matches.
+
+### crate_info
+
+Versions, features, dependencies, repository, `docs.rs` URL for a crate.
+
+### rustc_explain
+
+Reference text for a compiler error code (e.g. `E0382`).
+
+### run_locally
+
+Emit a plan of shell commands the calling agent should run on the user's machine. The server itself never executes user code; the trust boundary stays at the agent host.
+
+## Documentation corpus
+
+The bundled corpus is a read-only SQLite index plus zstd-compressed markdown blobs, baked into the container image. The index covers the std library and a curated set of popular crates. Sections are addressable by path and discoverable via `list_sections`.
+
+To add the server's documentation to an agent's context, you typically wire it through the agent's MCP integration:
+
+```sh
+# OpenCode
+opencode mcp add rust-docsbox \
+  --transport http \
+  --url https://rust-mcp.afterrealism.com/mcp
+```
+
+After adding, the agent can call `list_sections` to discover paths and `get_documentation` to fetch markdown for any section it needs.
+
+## Trust model
+
+- All linting and formatting runs in tempdirs with bounded timeouts and bounded captured output.
+- Tempdirs are cleaned up on exit; no persistent disk state per request.
+- `run_locally` never executes code on the server. It returns a plan; the calling agent dispatches the steps through its own host bash tool.
+- HTTP fetches (docs, crates.io, Playground) follow redirects with a 15-second timeout.
+- Single MCP request body is capped at 1 MiB to bound CPU spent on abuse.
+
+## Architecture
+
+- Implemented in Rust on `axum` + `tokio`.
+- MCP layer is `rmcp` with the streamable-HTTP server transport.
+- Documentation corpus is SQLite + zstd blobs, baked into the binary.
+- Container image deployed via Cloudflare Containers + Cloudflare Workers (Durable Objects).
+- TLS, edge caching, and DDoS mitigation handled by Cloudflare; the origin only sees Cloudflare's egress.
+
+## Source and license
+
+<https://github.com/afterrealism/rust-docsbox-mcp>, MIT licensed.
