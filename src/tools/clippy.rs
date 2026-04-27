@@ -37,7 +37,9 @@ pub struct Diagnostic {
     pub level: String,
     pub message: String,
     pub code: Option<String>,
+    #[schemars(schema_with = "super::util::optional_unsigned_integer_schema")]
     pub line: Option<u64>,
+    #[schemars(schema_with = "super::util::optional_unsigned_integer_schema")]
     pub col: Option<u64>,
     pub rendered: Option<String>,
 }

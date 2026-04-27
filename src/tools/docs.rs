@@ -12,6 +12,7 @@ use crate::server::{AppState, GetDocumentationArgs, ListSectionsArgs};
 
 #[derive(Debug, Serialize, schemars::JsonSchema)]
 pub struct SectionList {
+    #[schemars(schema_with = "super::util::unsigned_integer_schema")]
     pub total: usize,
     pub sections: Vec<SectionEntry>,
 }

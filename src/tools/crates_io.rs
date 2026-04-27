@@ -13,6 +13,7 @@ const SEARCH_URL: &str = "https://crates.io/api/v1/crates";
 
 #[derive(Debug, Serialize, schemars::JsonSchema)]
 pub struct CrateSearchResult {
+    #[schemars(schema_with = "super::util::unsigned_integer_schema")]
     pub total: u64,
     pub crates: Vec<CrateSummary>,
 }
@@ -22,6 +23,7 @@ pub struct CrateSummary {
     pub name: String,
     pub max_stable_version: Option<String>,
     pub description: Option<String>,
+    #[schemars(schema_with = "super::util::unsigned_integer_schema")]
     pub downloads: u64,
     pub repository: Option<String>,
     pub documentation: Option<String>,

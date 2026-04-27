@@ -4,8 +4,30 @@ use std::path::PathBuf;
 use std::time::Duration;
 
 use rmcp::ErrorData;
+use schemars::{json_schema, Schema, SchemaGenerator};
 use tempfile::TempDir;
 use tokio::process::Command;
+
+/// `schema_with` helper that emits a standards-compliant JSON Schema for
+/// a required unsigned integer. By default `schemars` annotates `u32` /
+/// `u64` / `usize` with non-standard `format: "uintNN"` keywords; strict
+/// validators (e.g. ajv on the MCP-client side) print a warning per
+/// occurrence. Express the constraint with `minimum: 0` instead.
+pub fn unsigned_integer_schema(_: &mut SchemaGenerator) -> Schema {
+    json_schema!({
+        "type": "integer",
+        "minimum": 0
+    })
+}
+
+/// `schema_with` helper for `Option<u*>` fields: same as
+/// [`unsigned_integer_schema`] but the type also accepts `null`.
+pub fn optional_unsigned_integer_schema(_: &mut SchemaGenerator) -> Schema {
+    json_schema!({
+        "type": ["integer", "null"],
+        "minimum": 0
+    })
+}
 
 /// Map any boxed error into an MCP `ErrorData::internal_error`.
 pub fn internal<E: std::fmt::Display>(e: E) -> ErrorData {

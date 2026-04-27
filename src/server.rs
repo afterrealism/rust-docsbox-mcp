@@ -88,6 +88,7 @@ pub struct CrateSearchArgs {
     pub query: String,
     /// 1..=20, defaults to 10.
     #[serde(default)]
+    #[schemars(schema_with = "crate::tools::util::optional_unsigned_integer_schema")]
     pub limit: Option<u32>,
 }
 
@@ -294,3 +295,109 @@ Use this server when writing or reviewing Rust code. Workflow:
 This server NEVER executes user-supplied code. `clippy_*`, `rustfmt`,
 and `rustc_explain` invoke the official toolchain on stdin/tempfiles.
 "#;
+
+#[cfg(test)]
+mod schema_format_tests {
+    //! Regression guard: ensure no `JsonSchema`-derived type emits a
+    //! non-standard `format: "uintNN"` annotation. Strict JSON-Schema
+    //! validators (e.g. ajv on the MCP-client side) print a warning per
+    //! occurrence and that noise corrupts the OpenCode TUI on startup.
+    //!
+    //! Use the `*_unsigned_integer_schema` helpers in `tools::util` on
+    //! every `u32`/`u64`/`usize` field of a `JsonSchema`-derived struct.
+
+    use crate::tools::clippy::{ClippyFixReport, ClippyReport, Diagnostic};
+    use crate::tools::crates_io::{
+        CrateInfoResult, CrateSearchResult, CrateSummary, DependencyEntry,
+    };
+    use crate::tools::docs::{SectionDoc, SectionEntry, SectionList};
+    use crate::tools::playground::{PlaygroundLink, PlaygroundResult};
+    use crate::tools::run_locally::Plan;
+    use crate::tools::rustc_explain::ExplainResult;
+    use crate::tools::rustfmt::FmtReport;
+
+    use super::{
+        CodeArgs, CrateInfoArgs, CrateSearchArgs, GetDocumentationArgs, ListSectionsArgs,
+        PlaygroundLinkArgs, PlaygroundRunArgs, RunLocallyArgs, RustcExplainArgs,
+    };
+    use rmcp::schemars::{schema_for, JsonSchema};
+    use serde_json::Value;
+
+    fn assert_no_uint_format<T: JsonSchema>() {
+        let schema = schema_for!(T);
+        let json = serde_json::to_value(&schema).expect("schema serialises");
+        let bad = collect_uint_formats(&json, String::new());
+        assert!(
+            bad.is_empty(),
+            "type `{}` emits non-standard JSON-Schema format(s) at: {:#?}\n\
+             use `#[schemars(schema_with = \"crate::tools::util::unsigned_integer_schema\")]` \
+             (or the `optional_*` variant for `Option<u*>`).",
+            std::any::type_name::<T>(),
+            bad
+        );
+    }
+
+    /// Walk the JSON value, return `(path, format_value)` for every
+    /// `format` keyword whose value starts with `"uint"`.
+    fn collect_uint_formats(value: &Value, path: String) -> Vec<(String, String)> {
+        let mut out = Vec::new();
+        match value {
+            Value::Object(map) => {
+                for (k, v) in map {
+                    let next = if path.is_empty() {
+                        k.clone()
+                    } else {
+                        format!("{path}.{k}")
+                    };
+                    if k == "format" {
+                        if let Some(s) = v.as_str() {
+                            if s.starts_with("uint") {
+                                out.push((next.clone(), s.to_string()));
+                            }
+                        }
+                    }
+                    out.extend(collect_uint_formats(v, next));
+                }
+            }
+            Value::Array(arr) => {
+                for (i, v) in arr.iter().enumerate() {
+                    out.extend(collect_uint_formats(v, format!("{path}[{i}]")));
+                }
+            }
+            _ => {}
+        }
+        out
+    }
+
+    #[test]
+    fn argument_structs_have_no_uint_format() {
+        assert_no_uint_format::<CodeArgs>();
+        assert_no_uint_format::<CrateInfoArgs>();
+        assert_no_uint_format::<CrateSearchArgs>();
+        assert_no_uint_format::<GetDocumentationArgs>();
+        assert_no_uint_format::<ListSectionsArgs>();
+        assert_no_uint_format::<PlaygroundLinkArgs>();
+        assert_no_uint_format::<PlaygroundRunArgs>();
+        assert_no_uint_format::<RunLocallyArgs>();
+        assert_no_uint_format::<RustcExplainArgs>();
+    }
+
+    #[test]
+    fn result_structs_have_no_uint_format() {
+        assert_no_uint_format::<ClippyFixReport>();
+        assert_no_uint_format::<ClippyReport>();
+        assert_no_uint_format::<CrateInfoResult>();
+        assert_no_uint_format::<CrateSearchResult>();
+        assert_no_uint_format::<CrateSummary>();
+        assert_no_uint_format::<DependencyEntry>();
+        assert_no_uint_format::<Diagnostic>();
+        assert_no_uint_format::<ExplainResult>();
+        assert_no_uint_format::<FmtReport>();
+        assert_no_uint_format::<PlaygroundLink>();
+        assert_no_uint_format::<PlaygroundResult>();
+        assert_no_uint_format::<Plan>();
+        assert_no_uint_format::<SectionDoc>();
+        assert_no_uint_format::<SectionEntry>();
+        assert_no_uint_format::<SectionList>();
+    }
+}
